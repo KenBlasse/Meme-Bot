@@ -3,6 +3,10 @@ from discord.ext import commands, tasks
 import aiohttp
 import random
 import os
+from keep_alive import keep_alive
+
+keep_alive() 
+
 
 CHANNEL_ID =  1367850811610366012# <– HIER deine Channel-ID einfügen
 
