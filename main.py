@@ -72,7 +72,7 @@ async def roll(ctx, dice: str = "1d6"):
         await ctx.send("❌ Format: z.B. !roll 2d10")
 
 
-@tasks.loop(minutes=120)
+@tasks.loop(minutes=90)
 async def post_news():
     channel = bot.get_channel(NEWS_CHANNEL_ID)
     if channel:
@@ -95,11 +95,11 @@ async def send_news(channel):
             ids = await response.json()
         
         headlines = []
-        for id in ids[:5]:
+        for id in ids[:2]:
             item_url = f"https://hacker-news.firebaseio.com/v0/item/{id}.json"
             async with session.get(item_url) as item_response:
                 item = await item_response.json()
-                headlines.append(f"📰 [{item['title']}]({item.get('url', 'https://news.ycombinator.com/item?id='+str(id))})")
+                headlines.append(f"({item.get('url', 'https://news.ycombinator.com/item?id='+str(id))})")
 
     await channel.send("\n".join(headlines))
 
