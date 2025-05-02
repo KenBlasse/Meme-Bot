@@ -4,9 +4,6 @@ import aiohttp
 import random
 import os
 
-
-token = os.getenv("DISCORD_TOKEN")
-
 CHANNEL_ID =  1367850811610366012# <– HIER deine Channel-ID einfügen
 
 # Bot Setup
@@ -28,7 +25,7 @@ async def on_ready():
 async def meme(ctx):
     await send_meme(ctx.channel)
 
-# Automatischer Poster (alle 60 Sekunden)
+
 @tasks.loop(minutes=5)
 async def post_meme():
     channel = bot.get_channel(CHANNEL_ID)
@@ -54,5 +51,5 @@ async def send_meme(channel):
     await channel.send(f"**{title}**\nFrom r/{subreddit}\n{image_url}")
 
 # Starte den Bot
-
+token = os.getenv("DISCOR_TOKEN")
 bot.run(token)
