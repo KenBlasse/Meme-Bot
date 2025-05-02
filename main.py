@@ -8,8 +8,9 @@ from keep_alive import keep_alive
 keep_alive() 
 
 
-MEME_CHANNEL_ID =  1367850811610366012# <– HIER deine Channel-ID einfügen
+MEME_CHANNEL_ID =  1367850811610366012
 FEATURE_CHANNEL_ID = 1367963171612266598
+NEWS_CHANNEL_ID = 1367973360818192476
 # Bot Setup
 intents = discord.Intents.default()
 intents.message_content = True
@@ -22,7 +23,8 @@ it_subreddits = ["ProgrammerHumor", "codinghumor", "techhumor", "linuxmemes"]
 @bot.event
 async def on_ready():
     print(f"✅ {bot.user} ist online!")
-    post_meme.start()  # Startet automatische Meme-Schleife
+    post_meme.start()
+    post_news.start()
 
 # !meme Befehl manuell
 @bot.command()
@@ -62,13 +64,45 @@ async def roll(ctx, dice: str = "1d6"):
         await ctx.send("❌ Dieser Befehl ist in diesem Channel nicht erlaubt.")
         return
     
-    import random
     try:
         rolls, limit = map(int, dice.lower().split("d"))
         results = [random.randint(1, limit) for _ in range(rolls)]
         await ctx.send(f"🎲 {dice}: {results} → Total: {sum(results)}")
     except:
         await ctx.send("❌ Format: z.B. !roll 2d10")
+
+
+@tasks.loop(minutes=120)
+async def post_news():
+    channel = bot.get_channel(NEWS_CHANNEL_ID)
+    if channel:
+        await send_news(channel)
+    else:
+        print("❌ Channel nicht gefunden. Prüfe die CHANNEL_ID.")
+
+@bot.command()
+async def news(ctx):
+    if ctx.channel.id != NEWS_CHANNEL_ID:
+        await ctx.send("❌ Dieser Befehl ist in diesem Channel nicht erlaubt.")
+        return
+
+    await send_news(ctx.channel)
+
+async def send_news(channel):
+    async with aiohttp.ClientSession() as session:
+        top_url = "https://hacker-news.firebaseio.com/v0/topstories.json"
+        async with session.get(top_url) as response:
+            ids = await response.json()
+        
+        headlines = []
+        for id in ids[:5]:
+            item_url = f"https://hacker-news.firebaseio.com/v0/item/{id}.json"
+            async with session.get(item_url) as item_response:
+                item = await item_response.json()
+                headlines.append(f"📰 [{item['title']}]({item.get('url', 'https://news.ycombinator.com/item?id='+str(id))})")
+
+    await channel.send("\n".join(headlines))
+
 
 # Starte den Bot
 token = os.getenv("DISCORD_TOKEN")
