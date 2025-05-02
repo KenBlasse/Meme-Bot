@@ -3,10 +3,10 @@ from discord.ext import commands, tasks
 import aiohttp
 import random
 import os
-from keep_alive import keep_alive  # Wenn du Replit nutzt
 
-# Setze hier deinen echten Discord-Channel-ID ein (nach Aktivierung von Entwicklermodus)
-CHANNEL_ID =  # <– HIER deine Channel-ID einfügen
+token = os.getenv("DISCORD_TOKEN")
+
+CHANNEL_ID =  1367850811610366012# <– HIER deine Channel-ID einfügen
 
 # Bot Setup
 intents = discord.Intents.default()
@@ -54,5 +54,4 @@ async def send_meme(channel):
 
 # Starte den Bot
 
-keep_alive()
 bot.run(token)
