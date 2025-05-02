@@ -4,6 +4,7 @@ import aiohttp
 import random
 import os
 
+
 token = os.getenv("DISCORD_TOKEN")
 
 CHANNEL_ID =  1367850811610366012# <– HIER deine Channel-ID einfügen
@@ -28,7 +29,7 @@ async def meme(ctx):
     await send_meme(ctx.channel)
 
 # Automatischer Poster (alle 60 Sekunden)
-@tasks.loop(minutes=1)
+@tasks.loop(minutes=5)
 async def post_meme():
     channel = bot.get_channel(CHANNEL_ID)
     if channel:
