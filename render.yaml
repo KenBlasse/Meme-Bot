@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: meme-bot
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: python main.py
