@@ -51,5 +51,5 @@ async def send_meme(channel):
     await channel.send(f"**{title}**\nFrom r/{subreddit}\n{image_url}")
 
 # Starte den Bot
-token = os.getenv("DISCOR_TOKEN")
+token = os.getenv("DISCORD_TOKEN")
 bot.run(token)
