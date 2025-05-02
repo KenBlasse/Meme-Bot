@@ -54,6 +54,7 @@ async def send_meme(channel):
     image_url = data["url"]
     await channel.send(f"**{title}**\nFrom r/{subreddit}\n{image_url}")
 
+@bot.command()
 async def roll(ctx, dice: str = "1d6"):
     allowed_channel_id = FEATURE_CHANNEL_ID
 
