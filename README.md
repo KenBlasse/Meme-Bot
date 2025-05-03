@@ -90,10 +90,8 @@ Der Bot bleibt so dauerhaft wach, da Render durch den Port-Zugriff aktiv bleibt.
 
 ## ✏️ To-Do / Ideen
 
-- [ ] Slash-Command-Unterstützung (`/meme`, `/roll`)
 - [ ] Themenbasierte News-Suche (`!news ai`)
 - [ ] GIFs, Insults oder Komplimente
-- [ ] Dashboard oder Web-Frontend?
 
 ---
 
