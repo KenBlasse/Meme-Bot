@@ -39,12 +39,21 @@ async def meme(ctx):
 import asyncio
 
 @bot.command()
-async def steamreviews(ctx, appid: str):
+async def steamreviews(ctx, appid: str, limit: str = "100"):
     if ctx.channel.id != REVIEW_CHANNEL_ID:
         await ctx.send("❌ Dieser Befehl ist nur im Review-Channel erlaubt.")
         return
 
     status = await ctx.send(f"📦 Lade Reviews für App-ID `{appid}`...")
+
+    if limit.lower() == "all":
+        max_reviews = None
+    else:
+        try:
+            max_reviews = int(limit)
+        except ValueError:
+            await status.edit(content="Ungültige Zahl. Bitte 'all' oder eine Zahl eingeben")
+            return
 
     try:
         await status.edit(content="⏳ Übersetzung läuft im Hintergrund...")
@@ -54,6 +63,7 @@ async def steamreviews(ctx, appid: str):
             appid,
             True,
             True
+            max_reviews
         )
         
         await ctx.send(
