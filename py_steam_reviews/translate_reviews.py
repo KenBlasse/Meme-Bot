@@ -36,7 +36,7 @@ def export_reviews(reviews: list, appid: str) -> str:
     return file_path
 
 
-def run_review_pipeline(appid: str, translate: bool = True, save: bool = True, max_reviews: int | None = 100):
+def run_review_pipeline(appid: str, translate: bool = True, save: bool = True, max_reviews: int | None = None):
     reviews = fetch_reviews_from_api(appid, max_reviews = max_reviews)
 
     if not reviews:
