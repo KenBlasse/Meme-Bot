@@ -8,3 +8,4 @@ langdetect
 openpyxl
 azure-core
 azure-ai-translation-text
+pandas
