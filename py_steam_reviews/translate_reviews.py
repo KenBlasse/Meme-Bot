@@ -1,10 +1,10 @@
 import pandas as pd
 import os
 from .steam_api_utils import fetch_reviews_from_api
+from .translator import translate_text
 
 def translate_reviews(reviews: list) -> list:
-    from .translator import translate_text
-
+    
     results = []
     for i, review in enumerate(reviews, 1):
         text = review.get("review", "")
@@ -36,7 +36,7 @@ def export_reviews(reviews: list, appid: str) -> str:
     return file_path
 
 
-def run_review_pipeline(appid: str, translate: bool = True, save: bool = True) -> str:
+def run_review_pipeline(appid: str, translate: bool = True, save: bool = True) -> tuple[str, int]:
     reviews = fetch_reviews_from_api(appid)
 
     if not reviews:
@@ -46,6 +46,7 @@ def run_review_pipeline(appid: str, translate: bool = True, save: bool = True) -
         reviews = translate_reviews(reviews)
 
     if save:
-        return export_reviews(reviews, appid)
+        file_path = export_reviews(reviews, appid)
+        return file_path, len(reviews)
 
-    return None
+    return None, len(reviews)

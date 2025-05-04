@@ -35,19 +35,25 @@ async def meme(ctx):
     await send_meme(ctx.channel)
 
 @bot.command()
+@bot.command()
 async def steamreviews(ctx, appid: str):
-    await ctx.send(f"📦 Starte Review-Abruf für Steam-App-ID `{appid}`...")
-    channel = bot.get_channel(REVIEW_CHANNEL_ID)
-    if channel:
-        await send_meme(channel)
-    else:
-        print("❌ Channel nicht gefunden. Prüfe die CHANNEL_ID.")
+    if ctx.channel.id != REVIEW_CHANNEL_ID:
+        await ctx.send("❌ Dieser Befehl ist nur im Review-Channel erlaubt.")
+        return
+
+    status = await ctx.send(f"📦 Starte Review-Abruf für App-ID `{appid}`...")
 
     try:
-        file_path = run_review_pipeline(appid=appid, translate=True, save=True)
+        await status.edit(content="⏳ Lade Steam-Reviews...")
+
+        file_path, review_count = run_review_pipeline(appid=appid, translate=True, save=True)
+
+        await status.edit(content=f"✅ {review_count} Reviews übersetzt. Sende Datei...")
+
         await ctx.send(file=discord.File(file_path))
+
     except Exception as e:
-        await ctx.send(f"❌ Fehler: {str(e)}")
+        await status.edit(content=f"❌ Fehler: {str(e)}")
 
 # Schleife für send_meme
 @tasks.loop(minutes=5)
