@@ -30,10 +30,10 @@ def fetch_reviews_from_api(app_id, max_reviews=None):
             all_reviews = all_reviews[:max_reviews]
             break
         
-        if not data.get("cursor"):
+        cursor = data.get("cursor")
+        if not cursor:
             break
         # Cursor vorbereiten
-        cursor = data["cursor"]
         page += 1
         time.sleep(1.1)  # API-Schutz (Rate Limit)
 
