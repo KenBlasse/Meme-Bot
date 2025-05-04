@@ -34,7 +34,7 @@ async def on_ready():
 async def meme(ctx):
     await send_meme(ctx.channel)
 
-@bot.command()
+
 @bot.command()
 async def steamreviews(ctx, appid: str):
     if ctx.channel.id != REVIEW_CHANNEL_ID:
@@ -56,7 +56,7 @@ async def steamreviews(ctx, appid: str):
         await status.edit(content=f"❌ Fehler: {str(e)}")
 
 # Schleife für send_meme
-@tasks.loop(minutes=5)
+@tasks.loop(minutes=15)
 async def post_meme():
     channel = bot.get_channel(MEME_CHANNEL_ID)
     if channel:
@@ -96,7 +96,7 @@ async def roll(ctx, dice: str = "1d6"):
         await ctx.send("❌ Format: z.B. !roll 2d10")
 
 
-@tasks.loop(minutes=90)
+@tasks.loop(minutes=240)
 async def post_news():
     channel = bot.get_channel(NEWS_CHANNEL_ID)
     if channel:
