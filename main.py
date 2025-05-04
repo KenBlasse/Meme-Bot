@@ -49,27 +49,26 @@ async def steamreviews(ctx, appid: str):
     try:
         await status.edit(content="⏳ Übersetzung läuft im Hintergrund...")
 
-        # ⚠️ run_review_pipeline() blockiert → also in Thread auslagern:
-        file_path, review_count = await asyncio.to_thread(
+        file_path, total, translated, skipped, errors = await asyncio.to_thread(
             run_review_pipeline,
             appid,
             True,
             True
         )
+        
         await ctx.send(
-            f"📊 Ergebnis:\n"
-            f"✅ Übersetzt: {translated}\n"
+            f"📊 Ergebnis für `{appid}`:\n"
+            f"✅ Übersetzt: {translated}/{total}\n"
             f"⚠️ Übersprungen (Deutsch): {skipped}\n"
             f"❌ Fehler: {errors}"
         )
 
-        await status.edit(content=f"✅ {review_count} Reviews übersetzt. Sende Datei...")
+        await status.edit(content=f"✅ {total} Reviews verarbeitet. Sende Datei...")
         await ctx.send(file=discord.File(file_path))
 
     except Exception as e:
         await status.edit(content=f"❌ Fehler: {str(e)}")
-        
-    return file_path, len(reviews), translated_count, skipped_count, error_count
+
 
 
 # Schleife für send_meme
