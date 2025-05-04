@@ -57,14 +57,15 @@ async def steamreviews(ctx, appid: str, limit: str = "100"):
 
     try:
         await status.edit(content="⏳ Übersetzung läuft im Hintergrund...")
-
+        loop = asyncio.get_event_loop()
         file_path, total, translated, skipped, errors = await asyncio.to_thread(
             run_review_pipeline,
             appid,
             True,
             True,
             max_reviews,
-            ctx.channel
+            ctx.channel,
+            loop
         )
         
         await ctx.send(

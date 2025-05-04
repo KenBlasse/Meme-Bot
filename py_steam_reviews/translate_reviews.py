@@ -37,7 +37,14 @@ def export_reviews(reviews: list, appid: str) -> str:
     return file_path
 
 
-def run_review_pipeline(appid: str, translate: bool = True, save: bool = True, max_reviews: int | None = None, progress_channel = None):
+def run_review_pipeline(
+        appid: str,
+        translate: bool = True,
+        save: bool = True, 
+        max_reviews: int | None = None, 
+        progress_channel = None, 
+        loop = None
+):
     reviews = fetch_reviews_from_api(appid, max_reviews = max_reviews)
 
     if not reviews:
@@ -67,7 +74,7 @@ def run_review_pipeline(appid: str, translate: bool = True, save: bool = True, m
             if progress_channel and i % 50 == 0:
                 asyncio.run_coroutine_threadsafe(
                     progress_channel.send(f"⏳ {i} Reviews verarbeitet..."),
-                    asyncio.get_event_loop()
+                    loop
                 )
                 
             translated_reviews.append({
