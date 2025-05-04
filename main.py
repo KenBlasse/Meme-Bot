@@ -4,13 +4,16 @@ import aiohttp
 import random
 import os
 from keep_alive import keep_alive
+from py_steam_reviews.translate_reviews import run_review_pipeline
 
 keep_alive() 
 
-
+# Channel IDs
 MEME_CHANNEL_ID =  1367850811610366012
 FEATURE_CHANNEL_ID = 1367963171612266598
 NEWS_CHANNEL_ID = 1367973360818192476
+REVIEW_CHANNEL_ID = 1368590938787545211
+
 # Bot Setup
 intents = discord.Intents.default()
 intents.message_content = True
@@ -30,6 +33,21 @@ async def on_ready():
 @bot.command()
 async def meme(ctx):
     await send_meme(ctx.channel)
+
+@bot.command()
+async def steamreviews(ctx, appid: str):
+    await ctx.send(f"📦 Starte Review-Abruf für Steam-App-ID `{appid}`...")
+    channel = bot.get_channel(REVIEW_CHANNEL_ID)
+    if channel:
+        await send_meme(channel)
+    else:
+        print("❌ Channel nicht gefunden. Prüfe die CHANNEL_ID.")
+
+    try:
+        file_path = run_review_pipeline(appid=appid, translate=True, save=True)
+        await ctx.send(file=discord.File(file_path))
+    except Exception as e:
+        await ctx.send(f"❌ Fehler: {str(e)}")
 
 # Schleife für send_meme
 @tasks.loop(minutes=5)
