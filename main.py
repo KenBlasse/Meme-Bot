@@ -56,12 +56,20 @@ async def steamreviews(ctx, appid: str):
             True,
             True
         )
+        await ctx.send(
+            f"📊 Ergebnis:\n"
+            f"✅ Übersetzt: {translated}\n"
+            f"⚠️ Übersprungen (Deutsch): {skipped}\n"
+            f"❌ Fehler: {errors}"
+        )
 
         await status.edit(content=f"✅ {review_count} Reviews übersetzt. Sende Datei...")
         await ctx.send(file=discord.File(file_path))
 
     except Exception as e:
         await status.edit(content=f"❌ Fehler: {str(e)}")
+        
+    return file_path, len(reviews), translated_count, skipped_count, error_count
 
 
 # Schleife für send_meme

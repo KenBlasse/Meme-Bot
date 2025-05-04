@@ -36,17 +36,45 @@ def export_reviews(reviews: list, appid: str) -> str:
     return file_path
 
 
-def run_review_pipeline(appid: str, translate: bool = True, save: bool = True) -> tuple[str, int]:
+def run_review_pipeline(appid: str, translate: bool = True, save: bool = True):
     reviews = fetch_reviews_from_api(appid)
 
     if not reviews:
         raise Exception("Keine Reviews gefunden.")
 
+    translated_count = 0
+    skipped_count = 0
+    error_count = 0
+
     if translate:
-        reviews = translate_reviews(reviews)
+        translated_reviews = []
+        for i, review in enumerate(reviews, 1):
+            text = review.get("review", "")
+            translated, skipped = translate_text(text, index=i)
+
+            if translated is None:
+                if skipped:
+                    skipped_count += 1
+                    translated_text = text
+                else:
+                    error_count += 1
+                    continue
+            else:
+                translated_count += 1
+                translated_text = translated
+
+            translated_reviews.append({
+                "Recommended": review.get("voted_up"),
+                "PlayTime": review.get("author", {}).get("playtime_forever", 0),
+                "Timestamp": review.get("timestamp_created", 0),
+                "Übersetzung": translated_text
+            })
+
+        reviews = translated_reviews
 
     if save:
         file_path = export_reviews(reviews, appid)
-        return file_path, len(reviews)
+    else:
+        file_path = None
 
-    return None, len(reviews)
+    return file_path, len(reviews), translated_count, skipped_count, error_count
