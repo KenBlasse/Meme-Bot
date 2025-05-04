@@ -14,7 +14,7 @@ def fetch_reviews_from_api(app_id, max_reviews=None):
     while True:
         url = (
             f"https://store.steampowered.com/appreviews/{app_id}"
-            f"?json=1&num_per_page=100&cursor={cursor}&language=all&filter=all"
+            f"?json=1&num_per_page=100&cursor={cursor}&language=english&filter=all"
         )
         
         response = requests.get(url)
@@ -23,6 +23,7 @@ def fetch_reviews_from_api(app_id, max_reviews=None):
             break
 
         data = response.json()
+        logger.info(f"🧾 Steam API zeigt {data.get('query_summary', {}).get('total_reviews')} Reviews insgesamt")
         new_reviews = data.get("reviews", [])
         if not new_reviews:
             logger.warning("ℹ️ Keine neuen Reviews mehr erhalten.")
