@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 import aiohttp
 import random
 import os
+import asyncio
 from keep_alive import keep_alive
 from py_steam_reviews.translate_reviews import run_review_pipeline
 
@@ -35,26 +36,33 @@ async def meme(ctx):
     await send_meme(ctx.channel)
 
 
+import asyncio
+
 @bot.command()
 async def steamreviews(ctx, appid: str):
     if ctx.channel.id != REVIEW_CHANNEL_ID:
         await ctx.send("❌ Dieser Befehl ist nur im Review-Channel erlaubt.")
         return
 
-    await ctx.send(f"📦 Starte Review-Abruf für App-ID `{appid}`...")
+    status = await ctx.send(f"📦 Lade Reviews für App-ID `{appid}`...")
 
     try:
-        await ctx.send(f"⏳ Lade Steam-Reviews...")
+        await status.edit(content="⏳ Übersetzung läuft im Hintergrund...")
 
-        file_path, review_count = run_review_pipeline(appid=appid, translate=True, save=True)
-        await ctx.send(f"{review_count} Reviews geladen.")
+        # ⚠️ run_review_pipeline() blockiert → also in Thread auslagern:
+        file_path, review_count = await asyncio.to_thread(
+            run_review_pipeline,
+            appid,
+            True,
+            True
+        )
 
-        await ctx.send(f"✅ {review_count} Reviews übersetzt. Sende Datei...")
-
+        await status.edit(content=f"✅ {review_count} Reviews übersetzt. Sende Datei...")
         await ctx.send(file=discord.File(file_path))
 
     except Exception as e:
-        await ctx.send(f"❌ Fehler: {str(e)}")
+        await status.edit(content=f"❌ Fehler: {str(e)}")
+
 
 # Schleife für send_meme
 @tasks.loop(minutes=15)
