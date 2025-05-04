@@ -1,41 +1,51 @@
 import requests
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 def fetch_reviews_from_api(app_id, max_reviews=None):
-    print(f"\n🔎 Start fetching game reviews {app_id} ...\n")
+    logger.info(f"🔎 Starte Review-Abruf für App-ID {app_id}")
+    
     cursor = "*"
     all_reviews = []
     page = 1
 
     while True:
-        url = f"https://store.steampowered.com/appreviews/{app_id}?json=1&num_per_page=100&cursor={cursor}&language=all&filter=recent"
+        url = (
+            f"https://store.steampowered.com/appreviews/{app_id}"
+            f"?json=1&num_per_page=100&cursor={cursor}&language=all&filter=recent"
+        )
         
         response = requests.get(url)
-        
         if not response.ok:
-            print("❌ Fehler beim Abruf der API.")
+            logger.error(f"❌ Fehler beim Abruf der API: {response.status_code}")
             break
 
         data = response.json()
         new_reviews = data.get("reviews", [])
         if not new_reviews:
-            print("ℹ️ No further reviews found.")
+            logger.warning("ℹ️ Keine neuen Reviews mehr erhalten.")
             break
 
         all_reviews.extend(new_reviews)
-        print(f"📄 Seite {page}: {len(new_reviews)} Reviews loaded...")
+        logger.info(f"📄 Seite {page}: {len(new_reviews)} Reviews geladen. Total: {len(all_reviews)}")
 
         if max_reviews and len(all_reviews) >= max_reviews:
-            print(f"🔺 Abort: Maximal amount ({max_reviews}) reached.")
+            logger.info(f"🔺 Limit erreicht: {len(all_reviews)} / {max_reviews}")
             all_reviews = all_reviews[:max_reviews]
             break
-        
-        cursor = data.get("cursor")
-        if not cursor:
-            break
-        # Cursor vorbereiten
-        page += 1
-        time.sleep(1.1)  # API-Schutz (Rate Limit)
 
-    print(f"✅ Total {len(all_reviews)} reviews loaded.\n")
+        new_cursor = data.get("cursor")
+        logger.info(f"📌 Cursor nach Seite {page}: {new_cursor}")
+
+        if not new_cursor or new_cursor == cursor:
+            logger.warning("⚠️ Kein gültiger neuer Cursor erhalten – breche ab.")
+            break
+
+        cursor = new_cursor
+        page += 1
+        time.sleep(1.1)
+
+    logger.info(f"✅ Insgesamt {len(all_reviews)} Reviews geladen.")
     return all_reviews
