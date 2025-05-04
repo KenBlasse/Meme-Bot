@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-from steam_api_utils import fetch_reviews_from_api
+from .steam_api_utils import fetch_reviews_from_api
 
 def translate_reviews(reviews: list) -> list:
     from translator import translate_text
