@@ -63,7 +63,8 @@ async def steamreviews(ctx, appid: str, limit: str = "100"):
             appid,
             True,
             True,
-            None
+            max_reviews,
+            ctx.channel
         )
         
         await ctx.send(
