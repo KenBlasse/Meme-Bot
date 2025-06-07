@@ -1,3 +1,12 @@
 discord.py
 aiohttp
+discord.py
+python-dotenv
+requests
+langdetect
+openpyxl
+azure-core
+azure-ai-translation-text
+pandas
+openai
 flask
