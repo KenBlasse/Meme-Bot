@@ -4,8 +4,13 @@ import aiohttp
 import random
 import os
 import asyncio
+import datetime
+import openai
 from keep_alive import keep_alive
 from py_steam_reviews.translate_reviews import run_review_pipeline
+from dotenv import load_dotenv
+
+load_dotenv()
 
 keep_alive() 
 
@@ -19,6 +24,7 @@ REVIEW_CHANNEL_ID = 1368590938787545211
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Meme-Subreddits mit IT-Bezug
 it_subreddits = ["ProgrammerHumor", "codinghumor", "techhumor", "linuxmemes"]
@@ -123,6 +129,39 @@ async def roll(ctx, dice: str = "1d6"):
     except:
         await ctx.send("❌ Format: z.B. !roll 2d10")
 
+@bot.command()
+async def weather(ctx, ort:str):
+    allowed_channel_id = FEATURE_CHANNEL_ID
+    datum = datetime.date.today().strftime("%d.%m.%Y")
+    
+
+    if ctx.channel.id != allowed_channel_id:
+        await ctx.send("❌ Dieser Befehl ist in diesem Channel nicht erlaubt.")
+        return
+
+    if ort is None:
+        await ctx.send("❗ Bitte gib einen Ort an. Beispiel: `!weather Hohen-Sülzen`")
+        return
+
+    prompt = f"Gib mir einen ausführlichen Wetterbericht für {ort} am {datum}."
+
+    await ctx.send("Hole aktuellen Wetterbericht...")
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role":"user", "content":prompt}],
+            temperature=0.7,
+            max_tokens=800
+        )
+
+        bericht = response.choices[0].message.content
+        for chunk in[bericht[i:i+2000] for i in range (0, len(bericht),2000)]:
+            await ctx.send(chunk)
+
+    except Exception as e:
+        await ctx.send(f"❌ Fehler beim Abrufen: {e}")
+    
 
 @tasks.loop(minutes=240)
 async def post_news():
