@@ -1,6 +1,5 @@
 discord.py
 aiohttp
-flask
 discord.py
 python-dotenv
 requests
@@ -9,3 +8,5 @@ openpyxl
 azure-core
 azure-ai-translation-text
 pandas
+openai
+flask
