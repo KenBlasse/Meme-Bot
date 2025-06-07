@@ -26,7 +26,7 @@ REVIEW_CHANNEL_ID = 1368590938787545211
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Meme-Subreddits mit IT-Bezug
 it_subreddits = ["ProgrammerHumor", "codinghumor", "techhumor", "linuxmemes"]
