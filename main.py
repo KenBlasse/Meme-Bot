@@ -5,7 +5,7 @@ import random
 import os
 import asyncio
 import datetime
-import openai from OpenAI
+from openai import OpenAI
 from keep_alive import keep_alive
 from py_steam_reviews.translate_reviews import run_review_pipeline
 from dotenv import load_dotenv
