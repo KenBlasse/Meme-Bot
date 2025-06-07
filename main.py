@@ -243,6 +243,6 @@ async def send_news(channel):
     await channel.send("\n".join(headlines))
 
 
-# Starte den Bot
-token = os.getenv("DISCORD_TOKEN")
-bot.run(token)
+if __name__ == "__main__":
+    token = os.getenv("DISCORD_TOKEN")
+    bot.run(token)
