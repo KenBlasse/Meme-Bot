@@ -5,10 +5,8 @@ import random
 import os
 import asyncio
 import datetime
-from openai import OpenAI
 from keep_alive import keep_alive
 from py_steam_reviews.translate_reviews import run_review_pipeline
-from dotenv import load_dotenv
 
 client = OpenAI()
 
@@ -26,7 +24,6 @@ REVIEW_CHANNEL_ID = 1368590938787545211
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Meme-Subreddits mit IT-Bezug
 it_subreddits = ["ProgrammerHumor", "codinghumor", "techhumor", "linuxmemes"]
@@ -132,34 +129,66 @@ async def roll(ctx, dice: str = "1d6"):
         await ctx.send("❌ Format: z.B. !roll 2d10")
 
 @bot.command()
-async def weather(ctx, ort:str):
+async def weather(ctx, plz: str):
     allowed_channel_id = FEATURE_CHANNEL_ID
-    datum = datetime.date.today().strftime("%d.%m.%Y")
-    
 
     if ctx.channel.id != allowed_channel_id:
         await ctx.send("❌ Dieser Befehl ist in diesem Channel nicht erlaubt.")
         return
 
-    if ort is None:
-        await ctx.send("❗ Bitte gib einen Ort an. Beispiel: `!weather Hohen-Sülzen`")
-        return
-
-    prompt = f"Gib mir einen ausführlichen Wetterbericht für {ort} am {datum}."
-
-    await ctx.send("Hole aktuellen Wetterbericht...")
+    await ctx.send("🌍 Hole Wetterdaten...")
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[{"role":"user", "content":prompt}],
-            temperature=0.7,
-            max_tokens=800
-        )
+        # 1. Hole Koordinaten und Ort von Zippopotam
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"http://api.zippopotam.us/de/{plz}") as resp:
+                if resp.status != 200:
+                    await ctx.send("❌ Ungültige PLZ oder Zippopotam antwortet nicht.")
+                    return
+                data = await resp.json()
+                ort = data['places'][0]['place name']
+                lat = data['places'][0]['latitude']
+                lon = data['places'][0]['longitude']
 
-        bericht = response.choices[0].message.content
-        for chunk in[bericht[i:i+2000] for i in range (0, len(bericht),2000)]:
-            await ctx.send(chunk)
+        # 2. Hole Wetterdaten von Open-Meteo
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
+            ) as resp:
+                if resp.status != 200:
+                    await ctx.send("❌ Wetterdaten konnten nicht abgerufen werden.")
+                    return
+                weather_data = await resp.json()
+
+        weather = weather_data["current_weather"]
+        temp = weather["temperature"]
+        wind = weather["windspeed"]
+        code = weather["weathercode"]
+
+        # Einfache Wettercode-Beschreibung
+        weather_map = {
+            0: "☀️ Klarer Himmel",
+            1: "🌤️ Teilweise bewölkt",
+            2: "⛅ Wechselhaft",
+            3: "☁️ Bewölkt",
+            45: "🌫️ Nebel",
+            48: "🌫️ Nebel mit Reif",
+            51: "🌦️ Leichter Nieselregen",
+            61: "🌧️ Leichter Regen",
+            63: "🌧️ Mäßiger Regen",
+            65: "🌧️ Starker Regen",
+            80: "🌦️ Regenschauer",
+            95: "⛈️ Gewitter",
+        }
+
+        beschreibung = weather_map.get(code, "🌍 Wetterdaten")
+
+        await ctx.send(
+            f"📍 **{ort} ({plz})**\n"
+            f"{beschreibung}\n"
+            f"🌡️ Temperatur: {temp} °C\n"
+            f"💨 Wind: {wind} km/h"
+        )
 
     except Exception as e:
         await ctx.send(f"❌ Fehler beim Abrufen: {e}")
