@@ -5,10 +5,8 @@ import random
 import os
 import asyncio
 import datetime
-from keep_alive import keep_alive
 from py_steam_reviews.translate_reviews import run_review_pipeline
 
-keep_alive() 
 
 # Channel IDs
 MEME_CHANNEL_ID =  1367850811610366012
