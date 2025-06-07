@@ -8,8 +8,6 @@ import datetime
 from keep_alive import keep_alive
 from py_steam_reviews.translate_reviews import run_review_pipeline
 
-load_dotenv()
-
 keep_alive() 
 
 # Channel IDs
