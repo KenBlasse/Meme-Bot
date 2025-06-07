@@ -125,28 +125,43 @@ async def roll(ctx, dice: str = "1d6"):
         await ctx.send("❌ Format: z.B. !roll 2d10")
 
 @bot.command()
-async def weather(ctx, plz: str):
+async def weather(ctx, *, ort_input: str):
     allowed_channel_id = FEATURE_CHANNEL_ID
 
     if ctx.channel.id != allowed_channel_id:
         await ctx.send("❌ Dieser Befehl ist in diesem Channel nicht erlaubt.")
         return
 
-    await ctx.send("🌍 Hole Wetterdaten...")
+    await ctx.send("🌍 Suche Wetterdaten...")
 
     try:
-        # 1. Hole Koordinaten und Ort von Zippopotam
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"http://api.zippopotam.us/de/{plz}") as resp:
-                if resp.status != 200:
-                    await ctx.send("❌ Ungültige PLZ oder Zippopotam antwortet nicht.")
-                    return
-                data = await resp.json()
-                ort = data['places'][0]['place name']
-                lat = data['places'][0]['latitude']
-                lon = data['places'][0]['longitude']
+        ort = None
+        lat = None
+        lon = None
 
-        # 2. Hole Wetterdaten von Open-Meteo
+        async with aiohttp.ClientSession() as session:
+            # 🏷️ Prüfe, ob PLZ (nur Ziffern)
+            if ort_input.strip().isdigit():
+                async with session.get(f"http://api.zippopotam.us/de/{ort_input.strip()}") as resp:
+                    if resp.status != 200:
+                        await ctx.send("❌ Ungültige PLZ.")
+                        return
+                    data = await resp.json()
+                    ort = data['places'][0]['place name']
+                    lat = data['places'][0]['latitude']
+                    lon = data['places'][0]['longitude']
+            else:
+                # 📍 Ortsname via Nominatim (OpenStreetMap)
+                async with session.get(f"https://nominatim.openstreetmap.org/search?q={ort_input}&format=json&limit=1") as resp:
+                    nominatim = await resp.json()
+                    if not nominatim:
+                        await ctx.send("❌ Ort nicht gefunden.")
+                        return
+                    ort = nominatim[0]["display_name"].split(",")[0]
+                    lat = nominatim[0]["lat"]
+                    lon = nominatim[0]["lon"]
+
+        # 🌦 Wetterdaten via Open-Meteo
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
@@ -161,30 +176,36 @@ async def weather(ctx, plz: str):
         wind = weather["windspeed"]
         code = weather["weathercode"]
 
-        # Einfache Wettercode-Beschreibung
+        # 🧠 Mapping von Wettercode → Beschreibung + Farbe
         weather_map = {
-            0: "☀️ Klarer Himmel",
-            1: "🌤️ Teilweise bewölkt",
-            2: "⛅ Wechselhaft",
-            3: "☁️ Bewölkt",
-            45: "🌫️ Nebel",
-            48: "🌫️ Nebel mit Reif",
-            51: "🌦️ Leichter Nieselregen",
-            61: "🌧️ Leichter Regen",
-            63: "🌧️ Mäßiger Regen",
-            65: "🌧️ Starker Regen",
-            80: "🌦️ Regenschauer",
-            95: "⛈️ Gewitter",
+            0:  ("☀️ Klarer Himmel", 0xf1c40f),
+            1:  ("🌤️ Teilweise bewölkt", 0xf39c12),
+            2:  ("⛅ Wechselhaft", 0xf39c12),
+            3:  ("☁️ Bewölkt", 0x95a5a6),
+            45: ("🌫️ Nebel", 0x7f8c8d),
+            48: ("🌫️ Nebel mit Reif", 0x7f8c8d),
+            51: ("🌦️ Leichter Nieselregen", 0x3498db),
+            61: ("🌧️ Leichter Regen", 0x3498db),
+            63: ("🌧️ Mäßiger Regen", 0x2980b9),
+            65: ("🌧️ Starker Regen", 0x2c3e50),
+            80: ("🌦️ Regenschauer", 0x3498db),
+            95: ("⛈️ Gewitter", 0xe74c3c),
         }
 
-        beschreibung = weather_map.get(code, "🌍 Wetterdaten")
+        beschreibung, farbe = weather_map.get(code, ("🌍 Wetterdaten", 0x1abc9c))
 
-        await ctx.send(
-            f"📍 **{ort} ({plz})**\n"
-            f"{beschreibung}\n"
-            f"🌡️ Temperatur: {temp} °C\n"
-            f"💨 Wind: {wind} km/h"
+        # 📦 Embed erstellen
+        embed = discord.Embed(
+            title=f"Wetter für {ort}",
+            description=beschreibung,
+            color=farbe
         )
+        embed.add_field(name="🌡️ Temperatur", value=f"{temp} °C", inline=True)
+        embed.add_field(name="💨 Wind", value=f"{wind} km/h", inline=True)
+        embed.set_footer(text="Quelle: Open-Meteo & OpenStreetMap")
+        embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/869/869869.png")
+
+        await ctx.send(embed=embed)
 
     except Exception as e:
         await ctx.send(f"❌ Fehler beim Abrufen: {e}")
