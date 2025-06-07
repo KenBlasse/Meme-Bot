@@ -5,10 +5,12 @@ import random
 import os
 import asyncio
 import datetime
-import openai
+import openai from OpenAI
 from keep_alive import keep_alive
 from py_steam_reviews.translate_reviews import run_review_pipeline
 from dotenv import load_dotenv
+
+client = OpenAI()
 
 load_dotenv()
 
@@ -148,7 +150,7 @@ async def weather(ctx, ort:str):
     await ctx.send("Hole aktuellen Wetterbericht...")
 
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[{"role":"user", "content":prompt}],
             temperature=0.7,
